@@ -29,7 +29,7 @@ jobs:
         run: cp .env.example .env
 
       - name: Build Release APK
-        run: ./gradlew assembleRelease --no-daemon
+        run: gradle assembleRelease --no-daemon
 
       - name: Upload Release APK
         uses: actions/upload-artifact@v4
