@@ -28,7 +28,14 @@ jobs:
       - name: Set up Environment File
         run: cp .env.example .env
 
+      - name: Generate Dummy Release Keystore
+        run: |
+          keytool -genkey -v -keystore my-upload-key.jks -storepass mypassword -alias upload -keypass mypassword -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Release,O=Android,C=US"
+
       - name: Build Release APK
+        env:
+          STORE_PASSWORD: mypassword
+          KEY_PASSWORD: mypassword
         run: gradle assembleRelease --no-daemon
 
       - name: Upload Release APK
