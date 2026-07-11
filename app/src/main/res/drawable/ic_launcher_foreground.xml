@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Outer soft glowing background ring -->
+    <path
+        android:fillColor="#152F63"
+        android:pathData="M54,20c18.78,0 34,15.22 34,34S72.78,88 54,88S20,72.78 20,54S35.22,20 54,20z"
+        android:alpha="0.2"/>
+
+    <!-- Dynamic Learning Cap Outline combined with Video Play Symbol in center -->
+    <!-- Cap top diamond shape -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M54,26 L86,40 L54,54 L22,40 Z"/>
+
+    <!-- Cap tassel -->
+    <path
+        android:fillColor="#E5C100"
+        android:pathData="M80,42 L80,58 L78,58 L78,42 Z"/>
+    
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M76,58 L82,58 L79,64 Z"/>
+
+    <!-- Bottom cap base (skull cap) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M34,48 C34,60 74,60 74,48 L70,48 C70,56 38,56 38,48 Z"/>
+
+    <!-- Center Play Button representing online/offline video playback -->
+    <path
+        android:fillColor="#4682B4"
+        android:pathData="M46,45 L46,63 L62,54 Z"/>
+</vector>
