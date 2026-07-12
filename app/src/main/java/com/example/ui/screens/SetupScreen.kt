@@ -108,22 +108,32 @@ fun SetupScreen(
 
         Spacer(modifier = Modifier.height(40.dp))
 
-        // Option 2: Select local directory tree
-        OutlinedButton(
+        // Primary Action: Select local directory tree
+        Button(
             onClick = {
                 folderPickerLauncher.launch(null)
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
+                .height(54.dp)
                 .testTag("select_folder_button"),
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.primary
-            )
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ),
+            shape = RoundedCornerShape(16.dp)
         ) {
-            Icon(imageVector = Icons.Default.FolderOpen, contentDescription = "Select Folder")
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Select Local Learning Folder", fontWeight = FontWeight.SemiBold)
+            Icon(
+                imageVector = Icons.Default.FolderOpen,
+                contentDescription = "Select Folder",
+                tint = MaterialTheme.colorScheme.onPrimary
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "Select Lesson Folder",
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp
+            )
         }
 
         Spacer(modifier = Modifier.height(32.dp))

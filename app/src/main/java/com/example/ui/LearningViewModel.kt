@@ -34,6 +34,9 @@ class LearningViewModel(application: Application) : AndroidViewModel(application
     private val _isSimulatedMode = MutableStateFlow(sharedPrefs.getBoolean("pref_is_simulated_mode", false))
     val isSimulatedMode: StateFlow<Boolean> = _isSimulatedMode.asStateFlow()
 
+    private val _themeMode = MutableStateFlow(sharedPrefs.getString("pref_theme_mode", "Dark") ?: "Dark")
+    val themeMode: StateFlow<String> = _themeMode.asStateFlow()
+
     private val _isDarkMode = MutableStateFlow(sharedPrefs.getBoolean("pref_is_dark_mode", true)) // Default to a gorgeous Dark Mode!
     val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
 
@@ -92,6 +95,14 @@ class LearningViewModel(application: Application) : AndroidViewModel(application
     fun setDarkMode(enabled: Boolean) {
         _isDarkMode.value = enabled
         sharedPrefs.edit().putBoolean("pref_is_dark_mode", enabled).apply()
+        setThemeMode(if (enabled) "Dark" else "Light")
+    }
+
+    fun setThemeMode(mode: String) {
+        _themeMode.value = mode
+        sharedPrefs.edit().putString("pref_theme_mode", mode).apply()
+        _isDarkMode.value = (mode == "Dark")
+        sharedPrefs.edit().putBoolean("pref_is_dark_mode", mode == "Dark").apply()
     }
 
     fun setLanguage(language: String) {

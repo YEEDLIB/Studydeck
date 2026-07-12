@@ -41,9 +41,15 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
-            val isDarkMode by viewModel.isDarkMode.collectAsState()
+            val themeMode by viewModel.themeMode.collectAsState()
+            val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
+            val darkTheme = when (themeMode) {
+                "Dark" -> true
+                "Light" -> false
+                else -> systemDark
+            }
 
-            MyApplicationTheme(darkTheme = isDarkMode) {
+            MyApplicationTheme(darkTheme = darkTheme) {
                 // Main Entry Control State
                 var showSplash by remember { mutableStateOf(true) }
                 val folderUri by viewModel.folderUriString.collectAsState()

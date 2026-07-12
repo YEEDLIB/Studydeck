@@ -28,6 +28,8 @@ fun ProgressScreen(
 ) {
     val lessons by viewModel.lessons.collectAsState()
     val allProgress by viewModel.allProgress.collectAsState()
+    val categories by viewModel.categories.collectAsState()
+    val allPlaylists by viewModel.allPlaylists.collectAsState()
     val scrollState = rememberScrollState()
 
     // Calculate metrics
@@ -213,7 +215,7 @@ fun ProgressScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("Total Courses Available:", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
-                    Text("${viewModel.categories.value.size} Categories", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text("${categories.size} Categories", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
@@ -222,7 +224,7 @@ fun ProgressScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("Total Playlist Channels:", fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
-                    Text("${viewModel.allPlaylists.value.size} Playlists", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text("${allPlaylists.size} Playlists", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
             }
         }

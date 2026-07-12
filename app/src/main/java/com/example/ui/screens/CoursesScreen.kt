@@ -91,11 +91,11 @@ fun CoursesScreen(
     val selectedCategory by viewModel.selectedCategory.collectAsState()
     val selectedPlaylist by viewModel.selectedPlaylist.collectAsState()
 
-    // Filter playlists and lessons based on selection
+    // Filter playlists and lessons based on selection (sorted by name/title)
     val filteredPlaylists = remember(selectedCategory, allPlaylists) {
         val cat = selectedCategory
         if (cat != null) {
-            allPlaylists.filter { it.categoryId == cat.id }
+            allPlaylists.filter { it.categoryId == cat.id }.sortedBy { it.name }
         } else {
             emptyList()
         }
@@ -104,7 +104,7 @@ fun CoursesScreen(
     val filteredLessons = remember(selectedPlaylist, lessons) {
         val play = selectedPlaylist
         if (play != null) {
-            lessons.filter { it.playlistId == play.id }
+            lessons.filter { it.playlistId == play.id }.sortedBy { it.title }
         } else {
             emptyList()
         }
@@ -300,6 +300,7 @@ fun CoursesScreen(
                     if (categories.isEmpty()) {
                         EmptyListState(message = "Please configure a learning folder in Settings to start learning.")
                     } else {
+                        val categoriesSorted = remember(categories) { categories.sortedBy { it.name } }
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxSize()
@@ -307,9 +308,9 @@ fun CoursesScreen(
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            items(categories) { category ->
+                            items(categoriesSorted) { category ->
                                 val categoryPlaylists = remember(category, allPlaylists) {
-                                    allPlaylists.filter { it.categoryId == category.id }
+                                    allPlaylists.filter { it.categoryId == category.id }.sortedBy { it.name }
                                 }
                                 val categoryPlaylistIds = remember(categoryPlaylists) {
                                     categoryPlaylists.map { it.id }.toSet()
