@@ -2,14 +2,11 @@ package com.example.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -37,7 +34,6 @@ fun SettingsScreen(
     val folderUri by viewModel.folderUriString.collectAsState()
     val isSimulated by viewModel.isSimulatedMode.collectAsState()
     val isDarkMode by viewModel.isDarkMode.collectAsState()
-    val themeMode by viewModel.themeMode.collectAsState()
     val isScanning by viewModel.isScanning.collectAsState()
 
     // Feedback Dialog States
@@ -123,74 +119,35 @@ fun SettingsScreen(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Palette,
-                        contentDescription = "Theme Icon",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Text("App Theme", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                        Text("Select your preferred color mode", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
+            Column {
+                // Dark Mode Switch
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val modes = listOf("System", "Light", "Dark")
-                    val modesLabels = listOf("System", "Light", "Dark")
-                    val icons = listOf(Icons.Default.Settings, Icons.Default.LightMode, Icons.Default.DarkMode)
-                    
-                    modes.forEachIndexed { index, mode ->
-                        val isSelected = themeMode == mode
-                        val label = modesLabels[index]
-                        val icon = icons[index]
-                        
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(44.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(
-                                    if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
-                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                                )
-                                .border(
-                                    width = 1.dp,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                .clickable { viewModel.setThemeMode(mode) }
-                                .testTag("theme_mode_$mode"),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                Icon(
-                                    imageVector = icon,
-                                    contentDescription = label,
-                                    tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = label,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                )
-                            }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.DarkMode,
+                            contentDescription = "Theme Icon",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text("Force Dark Theme", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                            Text("Optimized for nighttime studying", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
+                    Switch(
+                        checked = isDarkMode,
+                        onCheckedChange = { viewModel.setDarkMode(it) },
+                        modifier = Modifier.testTag("dark_mode_switch")
+                    )
                 }
+
+
             }
         }
 
@@ -212,7 +169,7 @@ fun SettingsScreen(
                     }
                 )
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                Divider(color = MaterialTheme.colorScheme.surfaceVariant)
 
                 // Backup Database
                 SettingsActionRow(
@@ -222,7 +179,7 @@ fun SettingsScreen(
                     onClick = { showBackupDialog = true }
                 )
 
-                HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+                Divider(color = MaterialTheme.colorScheme.surfaceVariant)
 
                 // Restore Database
                 SettingsActionRow(

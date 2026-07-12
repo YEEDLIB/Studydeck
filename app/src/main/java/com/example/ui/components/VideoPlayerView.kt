@@ -4,13 +4,10 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -44,9 +41,9 @@ fun VideoPlayerView(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    // Initialize ExoPlayer (using application context to avoid memory leaks)
+    // Initialize ExoPlayer
     val exoPlayer = remember {
-        ExoPlayer.Builder(context.applicationContext).build().apply {
+        ExoPlayer.Builder(context).build().apply {
             repeatMode = Player.REPEAT_MODE_OFF
         }
     }
@@ -57,29 +54,6 @@ fun VideoPlayerView(
     var totalDuration by remember { mutableStateOf(0L) }
     var showControls by remember { mutableStateOf(true) }
     var isLocked by remember { mutableStateOf(false) }
-
-    // Smooth dragging states for the seek bar
-    var isDragging by remember { mutableStateOf(false) }
-    var dragPosition by remember { mutableStateOf(0f) }
-
-    // Synchronize play/pause state and release player on disposal
-    DisposableEffect(exoPlayer) {
-        val listener = object : Player.Listener {
-            override fun onIsPlayingChanged(isPlayingChanged: Boolean) {
-                isPlaying = isPlayingChanged
-            }
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                if (playbackState == Player.STATE_ENDED) {
-                    isPlaying = false
-                }
-            }
-        }
-        exoPlayer.addListener(listener)
-        onDispose {
-            exoPlayer.removeListener(listener)
-            exoPlayer.release()
-        }
-    }
 
     // Gesture control States (Volume & Brightness simulation)
     var volumeLevel by remember { mutableStateOf(0.7f) } // 0.0 to 1.0
@@ -101,16 +75,12 @@ fun VideoPlayerView(
     }
 
     // Auto-save and progress updating loop
-    LaunchedEffect(exoPlayer, isPlaying, isDragging) {
+    LaunchedEffect(exoPlayer, isPlaying) {
         while (true) {
             if (exoPlayer.isPlaying) {
-                val pos = exoPlayer.currentPosition
-                val dur = exoPlayer.duration.coerceAtLeast(0L)
-                if (!isDragging) {
-                    currentPos = pos
-                    totalDuration = dur
-                }
-                onProgressUpdate(pos, dur)
+                currentPos = exoPlayer.currentPosition
+                totalDuration = exoPlayer.duration.coerceAtLeast(0L)
+                onProgressUpdate(currentPos, totalDuration)
             }
             delay(1000)
         }
@@ -121,6 +91,12 @@ fun VideoPlayerView(
         if (showControls && isPlaying) {
             delay(4000)
             showControls = false
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            exoPlayer.release()
         }
     }
 
@@ -188,41 +164,22 @@ fun VideoPlayerView(
             Box(
                 modifier = Modifier
                     .align(Alignment.Center)
-                    .background(Color.Black.copy(alpha = 0.85f), RoundedCornerShape(24.dp))
-                    .border(1.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(24.dp))
-                    .padding(horizontal = 24.dp, vertical = 20.dp),
+                    .background(Color.Black.copy(alpha = 0.75f), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(
                         imageVector = if (activeGestureText == "Volume") Icons.Default.VolumeUp else Icons.Default.BrightnessMedium,
                         contentDescription = activeGestureText,
                         tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(40.dp)
+                        modifier = Modifier.size(36.dp)
                     )
-                    
-                    val englishText = if (activeGestureText == "Volume") "Volume" else "Brightness"
-                    val percentageValue = (if (activeGestureText == "Volume") volumeLevel else brightnessLevel) * 100
-                    
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "$englishText: ${percentageValue.toInt()}%",
+                        text = "$activeGestureText: ${(if (activeGestureText == "Volume") volumeLevel else brightnessLevel * 100).toInt()}%",
                         color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    
-                    // Small visual gauge indicator
-                    LinearProgressIndicator(
-                        progress = { if (activeGestureText == "Volume") volumeLevel else brightnessLevel },
-                        modifier = Modifier
-                            .width(100.dp)
-                            .height(4.dp)
-                            .clip(RoundedCornerShape(2.dp)),
-                        color = MaterialTheme.colorScheme.secondary,
-                        trackColor = Color.White.copy(alpha = 0.2f)
+                        style = MaterialTheme.shapes.extraSmall.run { MaterialTheme.typography.bodyMedium }
                     )
                 }
             }
@@ -235,22 +192,41 @@ fun VideoPlayerView(
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.5f))
             ) {
-                // Floating translucent Lock button at center-left (avoids overlap with Back button at top-left)
-                IconButton(
-                    onClick = { isLocked = !isLocked },
-                    colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f)),
+                // Top controls (Title, lock, Picture in picture button)
+                Row(
                     modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .padding(start = 12.dp)
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter)
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
-                        contentDescription = "Lock Controls",
-                        tint = if (isLocked) MaterialTheme.colorScheme.secondary else Color.White
-                    )
+                    IconButton(
+                        onClick = { isLocked = !isLocked },
+                        colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
+                    ) {
+                        Icon(
+                            imageVector = if (isLocked) Icons.Default.Lock else Icons.Default.LockOpen,
+                            contentDescription = "Lock Controls",
+                            tint = if (isLocked) MaterialTheme.colorScheme.secondary else Color.White
+                        )
+                    }
+
+                    if (!isLocked) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // Brightness/Volume indicators
+                            IconButton(onClick = {}) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = "Quick Settings",
+                                    tint = Color.White
+                                )
+                            }
+                        }
+                    }
                 }
 
-                // Middle Controls (Play, Rewind, Fast Forward with high-fidelity rings and outlines)
+                // Middle Controls (Play, Rewind, Fast Forward)
                 if (!isLocked) {
                     Row(
                         modifier = Modifier.align(Alignment.Center),
@@ -263,16 +239,14 @@ fun VideoPlayerView(
                                 exoPlayer.seekTo(target)
                                 currentPos = target
                             },
-                            modifier = Modifier
-                                .size(48.dp)
-                                .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(24.dp)),
-                            colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.65f))
+                            modifier = Modifier.size(48.dp),
+                            colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Replay10,
                                 contentDescription = "Rewind 10s",
                                 tint = Color.White,
-                                modifier = Modifier.size(26.dp)
+                                modifier = Modifier.size(28.dp)
                             )
                         }
 
@@ -286,9 +260,7 @@ fun VideoPlayerView(
                                     isPlaying = true
                                 }
                             },
-                            modifier = Modifier
-                                .size(68.dp)
-                                .border(2.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(34.dp)),
+                            modifier = Modifier.size(64.dp),
                             colors = IconButtonDefaults.iconButtonColors(
                                 containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
                             )
@@ -297,7 +269,7 @@ fun VideoPlayerView(
                                 imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                                 contentDescription = "Play/Pause",
                                 tint = Color.White,
-                                modifier = Modifier.size(38.dp)
+                                modifier = Modifier.size(36.dp)
                             )
                         }
 
@@ -307,16 +279,14 @@ fun VideoPlayerView(
                                 exoPlayer.seekTo(target)
                                 currentPos = target
                             },
-                            modifier = Modifier
-                                .size(48.dp)
-                                .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(24.dp)),
-                            colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.65f))
+                            modifier = Modifier.size(48.dp),
+                            colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.6f))
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Forward10,
                                 contentDescription = "Forward 10s",
                                 tint = Color.White,
-                                modifier = Modifier.size(26.dp)
+                                modifier = Modifier.size(28.dp)
                             )
                         }
                     }
@@ -347,18 +317,11 @@ fun VideoPlayerView(
                             )
                         }
                         Slider(
-                            value = if (isDragging) dragPosition else (if (totalDuration > 0) currentPos.toFloat() / totalDuration.toFloat() else 0f),
+                            value = if (totalDuration > 0) currentPos.toFloat() / totalDuration.toFloat() else 0f,
                             onValueChange = { percent ->
-                                isDragging = true
-                                dragPosition = percent
-                                currentPos = (percent * totalDuration).toLong()
-                            },
-                            onValueChangeFinished = {
-                                val target = (dragPosition * totalDuration).toLong()
+                                val target = (percent * totalDuration).toLong()
                                 exoPlayer.seekTo(target)
                                 currentPos = target
-                                isDragging = false
-                                onProgressUpdate(target, totalDuration)
                             },
                             colors = SliderDefaults.colors(
                                 thumbColor = MaterialTheme.colorScheme.secondary,
